@@ -19,8 +19,10 @@
 
 */
 
-import { compact, mergeWith, forEach, isObjectLike } from 'lodash'
-import { Path, Map } from '../types.ts'
+import { mergeWith, forEach, isObjectLike } from 'lodash'
+
+import { Path, Map } from '../types'
+import { parsePath } from './modash'
 
 export type Subscription<T> = (newItem:(T | null), oldItem:(T | null)) => any
 
@@ -56,11 +58,6 @@ export class DiffNotifier<Item> {
         notify(this.subscriptionTree, previousItem, this.currentItem)
         return this
     }
-}
-
-
-function parsePath(path:Path):string[] {
-    return compact(path.split('/'))
 }
 
 function singletonSubscriptionTree<T>(parsedPath:string[], callback:Subscription<T>):SubscriptionTree {

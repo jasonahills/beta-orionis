@@ -3,7 +3,7 @@
 import { applyMiddleware, createStore } from 'redux'
 import * as thunk from 'redux-thunk'
 
-import * as diffNotifier from './lib/diff-notifier.ts'
+import * as diffNotifier from './lib/diff-notifier'
 
 console.log('diffNotifier', !!diffNotifier)
 

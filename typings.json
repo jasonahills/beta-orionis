@@ -1,11 +1,13 @@
 {
   "dependencies": {
     "chai": "registry:npm/chai#3.5.0+20160723033700",
+    "express": "registry:npm/express#4.14.0+20160925001530",
     "lodash": "registry:npm/lodash#4.0.0+20161015015725",
     "redux-thunk": "registry:npm/redux-thunk#2.0.0+20160525185520"
   },
   "globalDependencies": {
     "mocha": "registry:dt/mocha#2.2.5+20160720003353",
+    "node": "registry:dt/node#6.0.0+20161102143327",
     "redux": "registry:dt/redux#3.5.2+20160703092728"
   }
 }

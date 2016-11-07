@@ -1,4 +1,4 @@
-import { runTests as runDiffNotifierTests } from './diff-notifier.test.ts'
+import { runTests as runDiffNotifierTests } from './diff-notifier.test'
 
 export function runTests() {
     describe('lib >', () => {

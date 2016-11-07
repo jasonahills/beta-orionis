@@ -1,4 +1,4 @@
-import { runTests as runLibTests } from './lib/index.test.ts'
+import { runTests as runLibTests } from './lib/index.test'
 
 export function runTests() {
     describe('src >', () => {
