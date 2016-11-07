@@ -1,10 +1,19 @@
-export type Id = string
+//////////////////////
+/// String Aliases ///
+//////////////////////
+
+export type ID = string
+export type Path = string
+
+export interface Map<T> {
+    [key:string]:T
+}
+
 export interface Coordinate {
     x: number
     y: number
 }
 
-export type Path = Coordinate[]
 export type Polygon = Coordinate[]
 
 export type Segment = {
@@ -13,5 +22,5 @@ export type Segment = {
 }
 
 export interface HasId {
-    id: Id
+    id: ID
 }
