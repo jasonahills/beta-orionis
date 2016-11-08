@@ -6,10 +6,10 @@
   "scripts": {
     "build": "npm run clean && npm run lint && ./node_modules/.bin/tsc",
     "clean": "rm -rf ./dist",
-    "lint": "./node_modules/.bin/tslint ./src/index.ts ./src/index.test.ts ./example/index.example.ts",
+    "lint": "./node_modules/.bin/tslint ./src/index.ts ./src/index.test.ts ./examples/*.ts",
     "start": "npm run build && node ./dist/src/index.js",
     "test": "npm run build && ./node_modules/.bin/mocha --timeout 10000 --colors ./dist/src/index.test.js",
-    "example": "npm run build && node ./dist/example/index.example.js"
+    "gravity-example": "npm run build && node ./dist/examples/gravity-example.js"
   },
   "keywords": [
     "Space Center"
