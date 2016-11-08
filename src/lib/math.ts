@@ -1,6 +1,6 @@
 import { max, min } from 'lodash'
 
-import { Bbox, Polygon, Coordinate } from '../types'
+import { Polygon, Coordinate } from '../types'
 
 
 export function pythagorean(a:number, b:number):number {
@@ -33,26 +33,5 @@ export function vScalarMult(s:number, v:Coordinate) {
     return {
         x: v.x * s,
         y: v.y * s
-    }
-}
-
-
-// Geometry
-
-export function polygonBbox(p:Polygon):Bbox {
-    const xs:number[] = p.map((c)=>c.x)
-    const ys:number[] = p.map((c)=>c.y)
-    const minX = min(xs)
-    const maxX = max(xs)
-    const minY = min(ys)
-    const maxY = max(ys)
-
-    return {
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY,
-        cx: (maxX + minX) / 2,
-        cy: (maxY + minY) / 2
     }
 }
