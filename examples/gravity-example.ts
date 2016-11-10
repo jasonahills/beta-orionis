@@ -1,6 +1,7 @@
 'use strict'
 
 import { mapValues, reduce } from 'lodash'
+import { Schema } from 'jsonschema'  // TODO: actually import from our type definitions (that is, we need to expose Schema there too. )
 
 import { Map } from '../src/types'
 import { GameStateAPI } from '../src/api'
@@ -57,7 +58,45 @@ const commandEval = (ship:ExampleShip, c:any, s:ExampleGameState) => {
 
 const stateTransformation = (s:ExampleGameState):ExampleGameState => s
 
-const api = new GameStateAPI(initialState, updateWith, commandEval, stateTransformation, { port: 1338, updateInterval: 250 })
+const coordinateSchema:Schema = {
+    type: 'object',
+    properties: {
+        x: { type: 'number' },
+        y: { type: 'number' }
+    }
+}
+
+const displaySchema:Schema = {
+    type:'object',
+    properties: {
+        ships: {
+            type: 'object',
+            additionalProperties: {
+                type:'object',
+                properties: {
+                    id: { type: 'string' },
+                    position: coordinateSchema,
+                    velocity: coordinateSchema,
+                    mass: {type: 'number' }
+                }
+            }
+        }
+    }
+}
+
+const commandSchemas: Map<Schema> = {  // TODO: switch this out
+    test: {
+        type: 'object',
+        properties: { foo: { type: 'string' }},
+        required: ['foo']
+    }
+}
+
+const config = { port: 1338, updateInterval: 250 }
+
+
+const api = new GameStateAPI(initialState, updateWith, commandEval, stateTransformation, displaySchema, commandSchemas, config)
+
 
 
 export function main():void {

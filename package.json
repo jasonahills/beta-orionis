@@ -16,7 +16,9 @@
   ],
   "author": "Jason Andrew Hills",
   "dependencies": {
+    "body-parser": "^1.15.2",
     "express": "^4.14.0",
+    "jsonschema": "git://github.com/tdegrunt/jsonschema#df9016ac84e5e855ea1bf62d32d83a4dc04cf3b1",
     "lodash": "^4.16.6",
     "node-uuid": "^1.4.7",
     "redux": "^3.6.0",
