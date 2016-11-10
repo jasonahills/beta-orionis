@@ -16,7 +16,7 @@ export type CommandEval< Ship extends BaseShip, GameState extends BaseGameState<
 
 export interface Config {
     port: number
-    updateInterval: number // in seconds
+    updateInterval: number // in SECONDS  (not milliseconds)
 }
 
 export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameState<Ship>, DisplayGameState> {
@@ -79,7 +79,7 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
 
     start():GameStateAPI<Ship, GameState, DisplayGameState> {
         this.app.listen(this.config.port, () => console.log('Listening on port', this.config.port))
-        this.updateInterval = setInterval(() => this.store.dispatch(updateAction(this.config.updateInterval)), this.config.updateInterval )
+        this.updateInterval = setInterval(() => this.store.dispatch(updateAction(this.config.updateInterval)), 1000 * this.config.updateInterval )
         return this
     }
 

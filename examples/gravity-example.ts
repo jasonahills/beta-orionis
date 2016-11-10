@@ -41,12 +41,12 @@ const initialState:ExampleGameState = {
     }
 }
 
-const updateWith = (s:ExampleGameState):ExampleGameState => {
+const updateWith = (s:ExampleGameState, secondsElapsed:number):ExampleGameState => {
     return {
         ships: mapValues(s.ships, (ship, id) => {
             return (Object as any).assign({}, ship, {
-                position: vAdd(ship.position, ship.velocity),
-                velocity: vAdd(ship.velocity, gravityAcceleration(ship, s.ships))
+                position: vAdd(ship.position, vScalarMult(secondsElapsed, ship.velocity)),
+                velocity: vAdd(ship.velocity, gravityAcceleration(ship, s.ships, secondsElapsed))
             })
         })
     }
@@ -92,7 +92,10 @@ const commandSchemas: Map<Schema> = {  // TODO: switch this out
     }
 }
 
-const config = { port: 1338, updateInterval: 250 }
+const config = {
+    port: 1338,
+    updateInterval: 0.250
+}
 
 
 const api = new GameStateAPI(initialState, updateWith, commandEval, stateTransformation, displaySchema, commandSchemas, config)
@@ -108,13 +111,13 @@ main()
 
 
 
-function gravityAcceleration(ship:ExampleShip, ships:Map<ExampleShip>):Vector {
+function gravityAcceleration(ship:ExampleShip, ships:Map<ExampleShip>, secondsElapsed:number):Vector {
     const g = 0.01
     return reduce(ships, (acc, s) => {
         const dist = distance(ship.position, s.position)
         if (dist === 0) return acc
         const gravityMagnitude = (g * ship.mass * s.mass) / (dist * dist)
-        const gravityAccel = vScalarMult(gravityMagnitude, vSubtract(s.position, ship.position))
+        const gravityAccel = vScalarMult(gravityMagnitude * secondsElapsed, vSubtract(s.position, ship.position))
         return vAdd(acc, gravityAccel)
     }, {x:0, y:0})
 }
