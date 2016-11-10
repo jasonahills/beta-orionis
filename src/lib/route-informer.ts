@@ -5,6 +5,7 @@ import { isObjectLike, has } from 'lodash'
 import { Schema } from 'jsonschema'
 
 import { parsePath } from './modash'
+import { RouteInfo } from '../types'
 
 export class RouteInformer<T> {
 
@@ -34,9 +35,13 @@ export class RouteInformer<T> {
                 if (remainingTree === undefined || remainingSchema === undefined) return res.sendStatus(404)
             }
 
-            return (res as any).send({
-                schema: remainingSchema
-            })  //TODO: fix typing
+
+            const info:RouteInfo = {
+                methods: ['GET'],  //TODO: see if there is a good way to associate other verbs with these if necessary.
+                schemas: [remainingSchema]
+            }
+
+            return (res as any).send(info)  //TODO: fix typing
         }
     }
 }

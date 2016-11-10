@@ -1,8 +1,9 @@
 import * as express from 'express'
 import { json as jsonParser, urlencoded } from 'body-parser'
 import { Schema } from 'jsonschema'
+import { map, has } from 'lodash'
 
-import { BaseGameState, BaseShip, ShipCommand, Map } from './types'
+import { BaseGameState, BaseShip, ShipCommand, Map, RouteInfo } from './types'
 import { Store } from './lib/redux-sync'
 import { DiffNotifier } from './lib/diff-notifier'
 import { JSONResourceGetter } from './lib/json-resource-getter'
@@ -29,6 +30,7 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
     private jsonRouter: JSONResourceGetter<DisplayGameState>
     private store: Store<GameState>
     private updateInterval: any //TODO: type correctly
+    private commandMap: Map<Schema>
 
     constructor(
         private initialState: GameState,
@@ -51,14 +53,14 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
         // Set up our router
         this.app = express()
 
-        const commandMap = this.commandPayloadMap  //TODO: actually perform the transformation
+        this.commandMap = this.commandPayloadMap  //TODO: actually perform the transformation
         this.routeInformer = new RouteInformer(displayState, displayStateSchema)
         this.jsonRouter = new JSONResourceGetter(displayState)
 
         this.app.use(jsonParser())
         this.app.use(urlencoded({ extended: false }))
-        this.app.post('/ships/:shipId/commands', validatorMiddleware(validateCommand(commandMap)), commandPostHandler)
-        this.app.get('/ships/:shipId/commands?info', commandGetInfoHandler)
+        this.app.post('/ships/:shipId/commands', validatorMiddleware(validateCommand(this.commandMap)), this.commandPostHandler.bind(this))
+        this.app.get('/ships/:shipId/commands', this.commandGetInfoHandler.bind(this))
         this.app.get('*', this.routeInformer.middleware())
         this.app.get('*', this.jsonRouter.middleware())
         this.app.get('*', (req, res) => res.sendStatus(404))
@@ -86,16 +88,19 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
     loadState(state:GameState) {
         this.store.dispatch(stateReplaceAction(state))
     }
+
+    private commandGetInfoHandler(req, res, next) {
+        if (!has(req.query, 'info')) return next()
+        const info: RouteInfo = {
+            methods: ['POST'],
+            schemas: map(this.commandMap, (s) => s)
+        }
+        res.send(info)
+    }
+
+    private commandPostHandler(req, res) {
+        const command = req.body
+        console.log('command', command)
+        res.sendStatus(200)
+    }
 }
-
-
-function commandPostHandler(req, res) {
-    const command = req.body
-    console.log('command', command)
-    res.sendStatus(200)
-}
-
-function commandGetInfoHandler(req, res) {
-    res.send('stuff')
-}
-

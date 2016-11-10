@@ -1,3 +1,5 @@
+import { Schema } from 'jsonschema'
+
 //////////////////////
 /// String Aliases ///
 //////////////////////
@@ -53,3 +55,10 @@ export type ShipCommandEval<Ship extends BaseShip, State extends BaseGameState<S
 ) => ShipCommandResult<Ship>
 
 export type StateUpdateFunc<State extends BaseGameState<BaseShip>> = (s:State) => State
+
+export type HTTPVerb = 'GET' | 'PUT' | 'POST' | 'DELETE'
+
+export interface RouteInfo {
+    methods: HTTPVerb[],
+    schemas: Schema[]
+}
