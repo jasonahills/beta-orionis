@@ -2,18 +2,19 @@ import * as express from 'express'
 import { json as jsonParser, urlencoded } from 'body-parser'
 import { Schema } from 'jsonschema'
 import { map, has } from 'lodash'
+import * as path from 'path'
 
-import { BaseGameState, BaseShip, ShipCommand, Map, RouteInfo } from './types'
+import { BaseGameState, BaseShip, ShipCommand, Map, RouteInfo, ShipCommandEval, ShipCommandResult } from './types'
 import { Store } from './lib/redux-sync'
 import { DiffNotifier } from './lib/diff-notifier'
 import { JSONResourceGetter } from './lib/json-resource-getter'
 import { RouteInformer } from './lib/route-informer'
-import { GameStateUpdate, reducerBuilder, updateAction, stateReplaceAction } from './reducer'
+import { GameStateUpdate, reducerBuilder, updateAction, stateReplaceAction, shipReplaceAction } from './reducer'
 
 import { middleware as validatorMiddleware, validateCommand, validateWith } from './validators'
 
 export type GameStateTransformation<Ship extends BaseShip, GameState extends BaseGameState<Ship>, DisplayGameState> = (gs:GameState) => DisplayGameState
-export type CommandEval< Ship extends BaseShip, GameState extends BaseGameState<Ship>> = (s:Ship, c:ShipCommand<any>, gameState:GameState) => any  // TODO: finish typing this
+// export type CommandEval< Ship extends BaseShip, GameState extends BaseGameState<Ship>> = (s:Ship, c:ShipCommand<any>, gameState:GameState) => any  // TODO: finish typing this
 
 export interface Config {
     port: number
@@ -35,7 +36,7 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
     constructor(
         private initialState: GameState,
         private updateWith: GameStateUpdate<Ship, GameState>,
-        private commandEval: CommandEval<Ship, GameState>,
+        private commandEval: ShipCommandEval<Ship, GameState>,
         private stateTransformation: GameStateTransformation<Ship, GameState, DisplayGameState>,
         private displayStateSchema: Schema,
         private commandPayloadMap: Map<Schema>,
@@ -59,6 +60,7 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
 
         this.app.use(jsonParser())
         this.app.use(urlencoded({ extended: false }))
+        this.app.get('/gravity-example', (req, res) => res.sendFile(path.join(__dirname, '../../examples/gravity-example.html')))
         this.app.post('/ships/:shipId/commands', validatorMiddleware(validateCommand(this.commandMap)), this.commandPostHandler.bind(this))
         this.app.get('/ships/:shipId/commands', this.commandGetInfoHandler.bind(this))
         this.app.get('*', this.routeInformer.middleware())
@@ -99,8 +101,38 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
     }
 
     private commandPostHandler(req, res) {
+        // this.store.dispatch()
         const command = req.body
-        console.log('command', command)
-        res.sendStatus(200)
+        command.shipId = req.params.shipId
+        const state = this.store.getState()
+        const result = dryRunCommand(state, command, this.commandEval.bind(this))
+        if (result.success) {
+            this.store.dispatch(shipReplaceAction(result.ship))
+            res.sendStatus(200)
+        }
+        else {
+            res.status(400).send(result.err)
+        }
+
     }
 }
+
+function dryRunCommand<Ship extends BaseShip, GameState extends BaseGameState<Ship>>(state:GameState, command, commandEval):ShipCommandResult<Ship> {
+    const shipId = command.shipId
+    const ship = state.ships[shipId]
+    const successFunc = (s:Ship) => {
+        return {
+            ship: s,
+            success: true
+        }
+    }
+    const failFunc = (err:string) => {
+        return {
+            ship: ship,
+            success: false,
+            err: err
+        }
+    }
+    return commandEval(ship, command, state, successFunc, failFunc)
+}
+

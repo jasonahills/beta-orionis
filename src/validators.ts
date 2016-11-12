@@ -16,7 +16,6 @@ export function validateCommand(commandMap:Map<Schema>):ValidatorFunc {
             result.addError("Command must have a valid type string.")
             return result
         }
-        console.log('made it past first part')
         return v.validate(command, (commandMap[command.type] as Schema))
     }
 }
@@ -28,7 +27,6 @@ export function validateWith(obj:any, schema:Schema):ValidatorResult {
 export function middleware(validatorFunc:ValidatorFunc, getItem:(req:express.Request)=>any = getBody):express.RequestHandler {
     return (req:express.Request, res:express.Response, next:express.NextFunction) => {
         const result = validatorFunc(getItem(req))
-        console.log('result', result)
         if (result.valid) return next()
         return res.status(400).send(JSON.stringify(result))  //TODO: find out why typing thinks I need this to be a string.
 

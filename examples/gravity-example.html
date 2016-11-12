@@ -1,0 +1,64 @@
+<html>
+    <head>
+
+
+    </head>
+    <body>
+
+        <div id="app">
+            {{ state }}
+            {{ position }}
+            <div class="thruster-controls">
+                <button v-on:click="addMass">Add mass</button>
+                <!-- <button v-on:mousedown="startForwardThrusters" v-on:mouseup="stopForwardThrusters"></button> -->
+                <!-- <button v-on:mousedown="startReverseThrusters" v-on:mouseup="stopReverseThrusters"></button> -->
+                <!-- <button v-on:mousedown="startCounterclockwiseThrusters" v-on:mouseup="stopCounterclockwiseThrusters"></button> -->
+                <!-- <button v-on:mousedown="startClockwiseThrusters" v-on:mouseup="stopClockwiseThrusters"></button> -->
+            </div>
+        </div>
+
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script src="https://unpkg.com/vue/dist/vue.js"></script>
+        <script>
+
+            var state = { gameState: null }
+            var apiEndpoint = 'http://localhost:1338'
+            var voyagerEndpoint = apiEndpoint + '/ships/voyager'
+            var interval
+
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    state: state
+                },
+                computed: {
+                    position: function() { (this.state.gameState) ? JSON.stringify(this.state.gameState.ships.voyager.position) : '' }
+                },
+                methods: {
+                    loadGameState: function() {
+                        return axios.get(apiEndpoint)
+                        .then(function(rs) { state.gameState = rs.data })
+                    },
+                    // startForwardThrusters: function() {
+                    //     return axios.post(voyagerEndpoint+'/commands', {})
+                    // }
+                    addMass: function() {
+                        return axios.post(voyagerEndpoint+'/commands', {
+                            type: "test",
+                            shipId: "voyager",
+                            payload: {
+                                foo: 'bar'
+                            }
+                        })
+                    }
+                },
+                created: function() {
+                    interval = setInterval(this.loadGameState, 250)
+                },
+                destroy: function() {
+                    clearInterval(interval)
+                }
+            })
+        </script>
+    </body>
+</html>

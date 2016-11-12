@@ -3,7 +3,7 @@
 import { mapValues, reduce } from 'lodash'
 import { Schema } from 'jsonschema'  // TODO: actually import from our type definitions (that is, we need to expose Schema there too. )
 
-import { Map } from '../src/types'
+import { Map, ShipCommand, ShipCommandResult, ShipCommandSuccessFunc, ShipCommandFailFunc } from '../src/types'
 import { GameStateAPI } from '../src/api'
 import { vAdd, vSubtract, vScalarMult, distance } from '../src/lib/math'
 
@@ -52,9 +52,19 @@ const updateWith = (s:ExampleGameState, secondsElapsed:number):ExampleGameState 
     }
 }
 
-const commandEval = (ship:ExampleShip, c:any, s:ExampleGameState) => {
-    return { ship: ship, command: c }
+function commandEval(ship:ExampleShip, c:ShipCommand<any>, s:ExampleGameState, success:ShipCommandSuccessFunc<ExampleShip>, fail:ShipCommandFailFunc<ExampleShip>):ShipCommandResult<ExampleShip> {
+    if (c.payload.foo === 'bar') {
+        const newShip = (Object as any).assign({}, ship, {
+            mass: ship.mass + 1000
+        })
+        return success(newShip)
+    }
+    return fail('not a bar')
 }
+
+// const commandEvals = {
+//     test: commandEval
+// }
 
 const stateTransformation = (s:ExampleGameState):ExampleGameState => s
 
@@ -87,8 +97,17 @@ const displaySchema:Schema = {
 const commandSchemas: Map<Schema> = {  // TODO: switch this out
     test: {
         type: 'object',
-        properties: { foo: { type: 'string' }},
-        required: ['foo']
+        properties: {
+            type: { type: 'string'},
+            payload: {
+                type: 'object',
+                properties: {
+                    foo: {type: 'string' }
+                },
+                required: ['foo']
+            }
+        },
+        required: ['payload', 'type']
     }
 }
 

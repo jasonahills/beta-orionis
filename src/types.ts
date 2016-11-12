@@ -33,25 +33,30 @@ export interface BaseGameState<Ship extends BaseShip> {
 }
 
 export interface ShipCommand<Payload> extends HasId {
-    shipId: ID
+    shipId?: ID
     type: string
     payload: Payload
-    evaluated: boolean
-    success: boolean
 }
 
 export interface BaseShip extends HasId {
 
 }
 
-export type ShipCommandResult<Ship extends BaseShip> = { ship: Ship, command: ShipCommand<any> }
+export type ShipCommandResult<Ship extends BaseShip> = {
+    ship: Ship,
+    success: boolean
+    err?: string
+}
+
+export type ShipCommandSuccessFunc<Ship extends BaseShip> = (ship:Ship) => ShipCommandResult<Ship>
+export type ShipCommandFailFunc<Ship extends BaseShip> = (err:string) => ShipCommandResult<Ship>
 
 export type ShipCommandEval<Ship extends BaseShip, State extends BaseGameState<Ship>> = (
     ship:Ship,
     command:ShipCommand<any>,
     state:State,
-    success?: (ship:Ship) => ShipCommandResult<Ship>,
-    fail?: () => ShipCommandResult<Ship>
+    success: ShipCommandSuccessFunc<Ship>,
+    fail: ShipCommandFailFunc<Ship>
 ) => ShipCommandResult<Ship>
 
 export type StateUpdateFunc<State extends BaseGameState<BaseShip>> = (s:State) => State
