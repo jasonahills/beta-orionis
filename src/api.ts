@@ -1,7 +1,7 @@
 import * as express from 'express'
 import { json as jsonParser, urlencoded } from 'body-parser'
 import { Schema } from 'jsonschema'
-import { map, has } from 'lodash'
+import { map, has, mapValues } from 'lodash'
 import * as path from 'path'
 
 import { BaseGameState, BaseShip, ShipCommand, Map, RouteInfo, ShipCommandEval, ShipCommandResult } from './types'
@@ -54,7 +54,17 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
         // Set up our router
         this.app = express()
 
-        this.commandMap = this.commandPayloadMap  //TODO: actually perform the transformation
+        this.commandMap = mapValues(this.commandPayloadMap, (payloadSchema) => {
+            return {
+                type: 'object',
+                properties: {
+                    type: { type: 'string' },
+                    payload: payloadSchema
+                },
+                required: ['type', 'payload']
+            }
+        })
+
         this.routeInformer = new RouteInformer(displayState, displayStateSchema)
         this.jsonRouter = new JSONResourceGetter(displayState)
 
@@ -101,7 +111,6 @@ export class GameStateAPI< Ship extends BaseShip, GameState extends BaseGameStat
     }
 
     private commandPostHandler(req, res) {
-        // this.store.dispatch()
         const command = req.body
         command.shipId = req.params.shipId
         const state = this.store.getState()

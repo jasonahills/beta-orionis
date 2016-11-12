@@ -1,19 +1,38 @@
 <html>
     <head>
+        <style>
+            body {
+                overflow: hidden;
+                margin: 0;
+                color: grey;
+            }
 
+            .screen {
+                height: 100vh;
+                width: 100vw;
+                background-color: #222;
+            }
 
+            .thruster-controls {
+                position:absolute;
+                bottom: 0;
+                right: 0;
+            }
+        </style>
     </head>
     <body>
 
         <div id="app">
-            {{ state }}
-            {{ position }}
+            <svg viewBox="-1000 -1000 2000 2000" preserveAspectRatio="xMidYMid" class="screen">
+                <ship-symbol v-bind:ship="voyager" color="cornflowerblue"></ship-symbol>
+                <ship-symbol v-bind:ship="odyssey" color="red"></ship-symbol>
+            </svg>
             <div class="thruster-controls">
-                <button v-on:click="addMass">Add mass</button>
-                <!-- <button v-on:mousedown="startForwardThrusters" v-on:mouseup="stopForwardThrusters"></button> -->
-                <!-- <button v-on:mousedown="startReverseThrusters" v-on:mouseup="stopReverseThrusters"></button> -->
-                <!-- <button v-on:mousedown="startCounterclockwiseThrusters" v-on:mouseup="stopCounterclockwiseThrusters"></button> -->
-                <!-- <button v-on:mousedown="startClockwiseThrusters" v-on:mouseup="stopClockwiseThrusters"></button> -->
+                <p>{{ state }}</p>
+                <button v-on:mousedown="startForwardThrusters" v-on:mouseup="stopForwardThrusters">↑</button>
+                <button v-on:mousedown="startReverseThrusters" v-on:mouseup="stopReverseThrusters">↓</button>
+                <button v-on:mousedown="startCounterclockwiseThrusters" v-on:mouseup="stopCounterclockwiseThrusters">↺</button>
+                <button v-on:mousedown="startClockwiseThrusters" v-on:mouseup="stopClockwiseThrusters">↻</button>
             </div>
         </div>
 
@@ -21,10 +40,65 @@
         <script src="https://unpkg.com/vue/dist/vue.js"></script>
         <script>
 
-            var state = { gameState: null }
+            var state = {
+                gameState: {
+                    ships: {
+                        voyager: {
+                            id: 'voyager',
+                            position: { x: 0,  y: 0 },
+                            velocity: { x: 10, y: 10 },
+                            mass: 100,
+                            momentOfInertia: 100,
+                            angularVelocity: 10,
+                            orientation: 0,
+                            firingForwardThruster: false,
+                            firingReverseThruster: false,
+                            firingCounterclockwiseThruster: false,
+                            firingClockwiseThruster: false
+                        },
+                        odyssey: {
+                            id: 'odyssey',
+                            position: { x: 10,  y: 0 },
+                            velocity: { x: -10, y: -10 },
+                            mass: 150,
+                            momentOfInertia: 100,
+                            angularVelocity: 10,
+                            orientation: 0,
+                            firingForwardThruster: false,
+                            firingReverseThruster: false,
+                            firingCounterclockwiseThruster: false,
+                            firingClockwiseThruster: false
+                        }
+                    }
+                }
+            }
+
             var apiEndpoint = 'http://localhost:1338'
             var voyagerEndpoint = apiEndpoint + '/ships/voyager'
             var interval
+
+
+            shipComponent = Vue.component('ship-symbol', {
+                template: '<g v-bind:transform="transform">'+
+                    '<circle v-show="ship.firingForwardThruster"fill="yellow" r="10" cx="0" cy="-25"></circle>'+
+                    '<circle v-show="ship.firingReverseThruster" fill="yellow" r="10" cx="0" cy="30"></circle>'+
+                    '<circle v-show="ship.firingCounterclockwiseThruster" fill="yellow" r="6" cx="5" cy="15"></circle>'+
+                    '<circle v-show="ship.firingCounterclockwiseThruster" fill="yellow" r="6" cx="-10" cy="-15"></circle>'+
+                    '<circle v-show="ship.firingClockwiseThruster" fill="yellow" r="6" cx="-5" cy="15"></circle>'+
+                    '<circle v-show="ship.firingClockwiseThruster" fill="yellow" r="6" cx="10" cy="-15"></circle>'+
+
+                    // '<polygon v-show="ship.firingReverseThruster" fill="yellow" points="-5,10, 0,10, -2.5,30"></polygon>'+
+                    // '<polygon v-show="ship.firingReverseThruster" fill="yellow" points="-5,-20, 5,-20, 0,-30"></polygon>'+
+                    // '<polygon v-show="ship.firingForwardThruster" fill="yellow" points="-5,-20, 5,-20, 0,-30"></polygon>'+
+                    '<polygon v-bind:fill="color" points="-10,-20, 10,-20, 0,30"></polygon>'+
+                '</g>',
+                props: ['ship', 'color'],
+                computed: {
+                    transform: function() {
+                        return "translate("+this.ship.position.x+","+this.ship.position.y+") rotate("+this.ship.orientation+")"
+                    }
+                }
+            })
 
             var app = new Vue({
                 el: '#app',
@@ -32,31 +106,63 @@
                     state: state
                 },
                 computed: {
-                    position: function() { (this.state.gameState) ? JSON.stringify(this.state.gameState.ships.voyager.position) : '' }
+                    voyager: function() { return state.gameState.ships.voyager },
+                    odyssey: function() { return state.gameState.ships.odyssey }
                 },
                 methods: {
                     loadGameState: function() {
                         return axios.get(apiEndpoint)
                         .then(function(rs) { state.gameState = rs.data })
                     },
-                    // startForwardThrusters: function() {
-                    //     return axios.post(voyagerEndpoint+'/commands', {})
-                    // }
-                    addMass: function() {
-                        return axios.post(voyagerEndpoint+'/commands', {
-                            type: "test",
-                            shipId: "voyager",
-                            payload: {
-                                foo: 'bar'
-                            }
-                        })
+                    startForwardThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'START_FORWARD_THRUSTERS', payload: {}})
+                    },
+                    stopForwardThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'STOP_FORWARD_THRUSTERS', payload: {}})
+                    },
+                    startReverseThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'START_REVERSE_THRUSTERS', payload: {}})
+                    },
+                    stopReverseThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'STOP_REVERSE_THRUSTERS', payload: {}})
+                    },
+                    startCounterclockwiseThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'START_COUNTERCLOCKWISE_THRUSTERS', payload: {}})
+                    },
+                    stopCounterclockwiseThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'STOP_COUNTERCLOCKWISE_THRUSTERS', payload: {}})
+                    },
+                    startClockwiseThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'START_CLOCKWISE_THRUSTERS', payload: {}})
+                    },
+                    stopClockwiseThrusters: function() {
+                        return axios.post(voyagerEndpoint+'/commands', { type: 'STOP_CLOCKWISE_THRUSTERS', payload: {}})
+                    },
+                    handleKeyDown: function(e) {
+                        if (e.keyCode === 38) return this.startForwardThrusters()
+                        if (e.keyCode === 40) return this.startReverseThrusters()
+                        if (e.keyCode === 39) return this.startCounterclockwiseThrusters()
+                        if (e.keyCode === 37) return this.startClockwiseThrusters()
+                    },
+                    handleKeyUp: function(e) {
+                        if (e.keyCode === 38) return this.stopForwardThrusters()
+                        if (e.keyCode === 40) return this.stopReverseThrusters()
+                        if (e.keyCode === 39) return this.stopCounterclockwiseThrusters()
+                        if (e.keyCode === 37) return this.stopClockwiseThrusters()
                     }
+
                 },
                 created: function() {
                     interval = setInterval(this.loadGameState, 250)
+                    window.addEventListener('keydown', this.handleKeyDown)
+                    window.addEventListener('keyup', this.handleKeyUp)
+
+
                 },
                 destroy: function() {
                     clearInterval(interval)
+                    window.removeEventListener('keydown', this.handleKeyDown)
+                    window.removeEventListener('keyup', this.handleKeyUp)
                 }
             })
         </script>
