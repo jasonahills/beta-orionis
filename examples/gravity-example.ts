@@ -8,7 +8,7 @@ import { GameStateAPI } from '../src/api'
 import { vAdd, vSubtract, vScalarMult, distance } from '../src/lib/math'
 
 
-const rotationalThrustStrength = 50
+const rotationalThrustStrength = 100
 const thrustStrength = 100
 
 interface Vector {
